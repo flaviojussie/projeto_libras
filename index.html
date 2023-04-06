@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>VideoProva em Libras</title>
+</head>
+<body>
+  <h1>VideoProva em Libras</h1>
+  <label for="nomeProva">Nome da Prova:</label>
+  <input type="text" id="nomeProva">
+  <button id="salvarProva">Salvar</button>
+  <button id="editarProva" hidden>Editar</button>
+
+  <section id="adicionarQuestao">
+    <h2>Adicionar Questão à VideoProva</h2>
+    <input type="file" id="videoUpload" accept="video/*">
+    <video id="videoPlayer" controls></video>
+    <div>
+      <button id="A">A</button>
+      <label id="labelA"></label>
+      <button id="B">B</button>
+      <label id="labelB"></label>
+      <button id="C">C</button>
+      <label id="labelC"></label>
+      <button id="D">D</button>
+      <label id="labelD"></label>
+      <button id="E">E</button>
+      <label id="labelE"></label>
+    </div>
+  </section>
+  <button id="adicionar">Adicionar</button>
+  <button id="atualizar" hidden>Atualizar</button>
+
+  <section id="exibirQuestoes">
+    <h2>Questões adicionadas:</h2>
+    <ul id="listaQuestoes"></ul>
+  </section>
+  <script>
+    let nomeProva = '';
+    let questions = [];
+    let questionIndex = 1;
+    let selectedIndex = null;
+    
+    document.getElementById('salvarProva').addEventListener('click', () => {
+      nomeProva = document.getElementById('nomeProva').value;
+      document.getElementById('nomeProva').disabled = true;
+      document.getElementById('salvarProva').hidden = true;
+      document.getElementById('editarProva').hidden = false;
+    });
+    
+    document.getElementById('editarProva').addEventListener('click', () => {
+      document.getElementById('nomeProva').disabled = false;
+      document.getElementById('salvarProva').hidden = false;
+      document.getElementById('editarProva').hidden = true;
+    });
+    
+    document.getElementById('videoUpload').addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      const url = URL.createObjectURL(file);
+      document.getElementById('videoPlayer').src = url;
+    });
+    
+    ['A', 'B', 'C', 'D', 'E'].forEach((buttonId) => {
+      document.getElementById(buttonId).addEventListener('click', () => {
+        const video = document.getElementById('videoPlayer');
+        const time = video.currentTime.toFixed(2);
+        document.getElementById(`label${buttonId}`).textContent = time;
+      });
+    });
+    function atualizarListaQuestoes() {
+  const listaQuestoes = document.getElementById('listaQuestoes');
+  listaQuestoes.innerHTML = '';
+  questions.forEach((question, index) => {
+    const itemQuestao = document.createElement('li');
+    const linkQuestao = document.createElement('a');
+    linkQuestao.textContent = `Questão ${question.index}`;
+    linkQuestao.href = '#';
+    itemQuestao.appendChild(linkQuestao);
+    listaQuestoes.appendChild(itemQuestao);
+
+    const buttonExcluir = document.createElement('button');
+    buttonExcluir.textContent = 'Excluir';
+    itemQuestao.appendChild(buttonExcluir);
+
+    buttonExcluir.addEventListener('click', () => {
+      questions.splice(index, 1);
+      atualizarListaQuestoes();
+    });
+    if (index < questions.length - 1) {
+      const buttonMoverBaixo = document.createElement('button');
+      buttonMoverBaixo.textContent = 'Mover para baixo';
+      itemQuestao.appendChild(buttonMoverBaixo);
+
+      buttonMoverBaixo.addEventListener('click', () => {
+        [questions[index], questions[index + 1]] = [questions[index + 1], questions[index]];
+        atualizarListaQuestoes();
+      });
+    }
+
+    linkQuestao.addEventListener('click', () => {
+      document.getElementById('videoPlayer').src = question.video;
+      ['A', 'B', 'C', 'D', 'E'].forEach((buttonId) => {
+        document.getElementById(`label${buttonId}`).textContent = question.markers[buttonId];
+      });
+      selectedIndex = index;
+      document.getElementById('adicionar').hidden = true;
+      document.getElementById('atualizar').hidden = false;
+    });
+  });
+}
+document.getElementById('adicionar').addEventListener('click', () => {
+  const video = document.getElementById('videoPlayer');
+  const markers = {
+    A: parseFloat(document.getElementById('labelA').textContent),
+    B: parseFloat(document.getElementById('labelB').textContent),
+    C: parseFloat(document.getElementById('labelC').textContent),
+    D: parseFloat(document.getElementById('labelD').textContent),
+    E: parseFloat(document.getElementById('labelE').textContent),
+  };
+
+  const newQuestion = {
+    index: questionIndex,
+    video: video.src,
+    markers,
+  };
+  questions.push(newQuestion);
+
+  atualizarListaQuestoes();
+
+  questionIndex++;
+});
+
+document.getElementById('atualizar').addEventListener('click', () => {
+  if (selectedIndex !== null) {
+    const updatedQuestion = {
+      index: selectedIndex + 1,
+      video: document.getElementById('videoPlayer').src,
+      markers: {
+        A: parseFloat(document.getElementById('labelA').textContent),
+        B: parseFloat(document.getElementById('labelB').textContent),
+        C: parseFloat(document.getElementById('labelC').textContent),
+        D: parseFloat(document.getElementById('labelD').textContent),
+        E: parseFloat(document.getElementById('labelE').textContent),
+      }
+    };
+
+    questions[selectedIndex] = updatedQuestion;
+
+    document.getElementById('videoPlayer').src = '';
+    ['A', 'B', 'C', 'D', 'E'].forEach((buttonId) => {
+      document.getElementById(`label${buttonId}`).textContent = '';
+    });
+    
+    selectedIndex = null;
+    document.getElementById('adicionar').hidden = false;
+    document.getElementById('atualizar').hidden = true;
+
+    atualizarListaQuestoes();
+  }
+});
+</script>
+</body>
+</html>
